@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Littlechat</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #292a3b; background: #f3f4fa; }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; padding: 24px; display: grid; place-items: center; background: radial-gradient(ellipse at 70% 8%, #e5e7ff 0, transparent 36%), #f3f4fa; }
+    .shell { width: min(960px, 100%); min-height: 590px; display: grid; grid-template-columns: .92fr 1.08fr; overflow: hidden; border: 1px solid #e7e8f0; border-radius: 25px; background: #fff; box-shadow: 0 28px 90px #252a471c; }
+    .welcome { position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 38px; color: white; background: linear-gradient(145deg, #8274f0, #5d53ce 72%, #5147bb); }
+    .welcome::before, .welcome::after { content: ""; position: absolute; border: 1px solid #ffffff24; border-radius: 50%; pointer-events: none; }
+    .welcome::before { width: 390px; height: 390px; right: -185px; bottom: -140px; box-shadow: 0 0 0 36px #ffffff08, 0 0 0 74px #ffffff07; }
+    .welcome::after { width: 230px; height: 230px; right: -105px; bottom: -60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-mark { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid #ffffff45; border-radius: 12px; background: #ffffff1c; font-size: 18px; }
+    .welcome-copy { position: relative; z-index: 1; margin: auto 0; padding: 35px 0; }
+    .eyebrow { margin-bottom: 18px; color: #dedbff; font-size: 10px; font-weight: 750; letter-spacing: 1.8px; text-transform: uppercase; }
+    h1 { max-width: 350px; margin: 0 0 15px; font-size: clamp(32px, 4vw, 43px); font-weight: 700; letter-spacing: -1.7px; line-height: 1.08; }
+    .welcome-copy p { max-width: 330px; color: #eceaff; font-size: 14px; line-height: 1.75; }
+    .features { position: relative; z-index: 1; display: grid; gap: 13px; margin: 28px 0 3px; color: #f2f0ff; font-size: 12px; }
+    .features span { display: flex; align-items: center; gap: 10px; }
+    .check { width: 19px; height: 19px; display: grid; place-items: center; border: 1px solid #ffffff42; border-radius: 7px; background: #ffffff14; font-size: 11px; }
+    .panel { display: flex; align-items: center; justify-content: center; padding: 48px clamp(28px, 6vw, 68px); }
+    .form-wrap { width: min(100%, 365px); }
+    .mobile-brand { display: none; align-items: center; gap: 9px; margin-bottom: 32px; color: #6255d5; font-weight: 750; }
+    .mobile-brand .brand-mark { color: white; background: linear-gradient(145deg, #8b7bff, #6558de); }
+    .heading { margin-bottom: 27px; }
+    .heading h2 { margin: 0 0 8px; color: #292a3b; font-size: 25px; letter-spacing: -.8px; }
+    .heading p { margin: 0; color: #9192a3; font-size: 13px; line-height: 1.5; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 25px; padding: 4px; border: 1px solid #ededf3; border-radius: 12px; background: #f8f8fb; }
+    .tabs button { height: 36px; border: 0; border-radius: 9px; background: transparent; color: #868799; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+    .tabs button.active { background: #fff; color: #6054d2; box-shadow: 0 2px 7px #30304a12; }
+    .field { display: grid; gap: 7px; margin-bottom: 16px; }
+    label { color: #545568; font-size: 11px; font-weight: 650; }
+    input { width: 100%; height: 45px; border: 1px solid #e5e6ef; border-radius: 11px; padding: 0 13px; background: white; color: #343548; outline: none; font: inherit; font-size: 13px; transition: border .15s, box-shadow .15s; }
+    input::placeholder { color: #b2b3c0; }
+    input:focus { border-color: #9389ef; box-shadow: 0 0 0 3px #8174e51a; }
+    .password-note { margin-top: -6px; color: #a1a2b0; font-size: 10px; }
+    .error { display: none; margin: -3px 0 14px; padding: 10px 12px; border: 1px solid #f4d1d5; border-radius: 10px; background: #fff5f6; color: #bd4855; font-size: 11px; line-height: 1.45; }
+    .error.visible { display: block; }
+    .submit { width: 100%; height: 45px; margin-top: 5px; border: 0; border-radius: 11px; background: #6d60df; color: white; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 15px #6d60df2b; transition: background .15s, transform .15s; }
+    .submit:hover { background: #5b50ce; transform: translateY(-1px); }
+    .submit:disabled { opacity: .6; cursor: wait; transform: none; }
+    .terms { margin: 17px 0 0; color: #a2a3b1; font-size: 10px; line-height: 1.6; text-align: center; }
+    .terms strong { color: #6a6b7d; font-weight: 600; }
+    @media (max-width: 700px) { body { padding: 0; } .shell { width: 100%; min-height: 100vh; grid-template-columns: 1fr; border: 0; border-radius: 0; } .welcome { display: none; } .panel { padding: 35px 25px; } .mobile-brand { display: flex; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="welcome" aria-label="Welcome">
+      <div class="brand"><span class="brand-mark">✳</span> littlechat</div>
+      <div class="welcome-copy">
+        <div class="eyebrow">A space for your people</div>
+        <h1>Good conversations start here.</h1>
+        <p>Stay close to your friends with messages, voice notes, and calls in one simple place.</p>
+        <div class="features">
+          <span><span class="check">✓</span> Private account for your chat name</span>
+          <span><span class="check">✓</span> Messages saved to your account</span>
+          <span><span class="check">✓</span> Voice and video calls with friends</span>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="form-wrap">
+        <div class="mobile-brand"><span class="brand-mark">✳</span> littlechat</div>
+        <div class="heading">
+          <h2 id="headingTitle">Welcome back</h2>
+          <p id="headingSubtitle">Sign in to continue to your chat.</p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Account access">
+          <button class="active" type="button" data-mode="login" role="tab" aria-selected="true">Sign in</button>
+          <button type="button" data-mode="register" role="tab" aria-selected="false">Create account</button>
+        </div>
+        <div id="error" class="error" role="alert"></div>
+        <form id="registerForm" hidden>
+          <div class="field"><label for="registerName">Your name</label><input id="registerName" name="name" autocomplete="name" minlength="2" maxlength="40" placeholder="e.g. Sam Taylor" required></div>
+          <div class="field"><label for="registerEmail">Email address</label><input id="registerEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></div>
+          <div class="field"><label for="registerPassword">Password</label><input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" placeholder="At least 8 characters" required><span class="password-note">Use 8 or more characters.</span></div>
+          <button class="submit" type="submit">Create account</button>
+        </form>
+        <form id="loginForm">
+          <div class="field"><label for="loginEmail">Email address</label><input id="loginEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></div>
+          <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" maxlength="72" placeholder="Enter your password" required></div>
+          <button class="submit" type="submit">Sign in</button>
+        </form>
+        <p class="terms">By continuing, you agree to use this demo chat respectfully.<br>Your password is stored as a secure hash.</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const tabs = document.querySelectorAll('[data-mode]');
+    const loginForm = document.querySelector('#loginForm');
+    const registerForm = document.querySelector('#registerForm');
+    const errorBox = document.querySelector('#error');
+    let mode = 'login';
+
+    function selectMode(nextMode) {
+      mode = nextMode;
+      const registering = mode === 'register';
+      loginForm.hidden = registering;
+      registerForm.hidden = !registering;
+      document.querySelector('#headingTitle').textContent = registering ? 'Create your account' : 'Welcome back';
+      document.querySelector('#headingSubtitle').textContent = registering ? 'A couple of details and you’re in.' : 'Sign in to continue to your chat.';
+      tabs.forEach((tab) => {
+        const selected = tab.dataset.mode === mode;
+        tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-selected', String(selected));
+      });
+      errorBox.classList.remove('visible');
+      errorBox.textContent = '';
+    }
+
+    tabs.forEach((tab) => tab.addEventListener('click', () => selectMode(tab.dataset.mode)));
+
+    async function submitForm(event, formMode) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const button = form.querySelector('.submit');
+      button.disabled = true;
+      button.textContent = formMode === 'register' ? 'Creating account…' : 'Signing in…';
+      errorBox.classList.remove('visible');
+      const body = Object.fromEntries(new FormData(form).entries());
+      try {
+        const response = await fetch(`/api/auth/${formMode}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not continue. Please try again.');
+        location.replace('/');
+      } catch (error) {
+        errorBox.textContent = error.message;
+        errorBox.classList.add('visible');
+      } finally {
+        button.disabled = false;
+        button.textContent = formMode === 'register' ? 'Create account' : 'Sign in';
+      }
+    }
+
+    loginForm.addEventListener('submit', (event) => submitForm(event, 'login'));
+    registerForm.addEventListener('submit', (event) => submitForm(event, 'register'));
+    fetch('/api/auth/me').then((response) => { if (response.ok) location.replace('/'); }).catch(() => {});
+  </script>
+</body>
+</html>

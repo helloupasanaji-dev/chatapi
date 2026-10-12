@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Chat</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #242536; background: #f1f2f8; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(ellipse at 65% 2%, #e7e9ff 0, transparent 36%), #f3f4f9; }
+    [hidden] { display: none !important; }
+    .app-shell { width: min(1280px, 100%); height: min(880px, calc(100vh - 56px)); min-height: 560px; display: grid; grid-template-columns: 250px minmax(0, 1fr); overflow: hidden; border: 1px solid #e7e8f0; border-radius: 24px; background: #fff; box-shadow: 0 28px 90px #252a471c; }
+    .sidebar { display: flex; flex-direction: column; padding: 25px 18px 18px; background: #fafaff; border-right: 1px solid #ebecf3; }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 7px; color: #25263a; font-size: 17px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; color: #fff; border-radius: 11px; background: linear-gradient(145deg, #8b7bff, #6558de); box-shadow: 0 5px 14px #7261e94a; font-size: 17px; }
+    .brand > span:last-child { color: #7568e8; }
+    .workspace { display: flex; align-items: center; gap: 10px; margin: 35px 0 30px; padding: 12px; border: 1px solid #e9eaf2; border-radius: 14px; background: white; box-shadow: 0 3px 12px #27264a08; }
+    .workspace-mark { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 34px; border-radius: 10px; color: #6558d8; background: #eeecff; font-size: 11px; font-weight: 750; }
+    .workspace-copy { min-width: 0; display: grid; gap: 3px; }
+    .workspace-copy strong { font-size: 12px; font-weight: 650; }
+    .workspace-copy small { color: #9293a5; font-size: 11px; }
+    .sidebar-label { margin: 0 8px 10px; color: #a0a1b1; font-size: 10px; font-weight: 750; letter-spacing: 1.1px; }
+    .side-link { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 11px; color: #5c5d72; font-size: 13px; font-weight: 600; }
+    .side-link.active { background: #eeedff; color: #6255d5; }
+    .hash { color: #8a7fff; font-size: 17px; }
+    .live-tag { margin-left: auto; padding: 4px 7px; border-radius: 7px; background: #eaf7f0; color: #3d966c; font-size: 9px; font-weight: 750; letter-spacing: .5px; }
+    .friend-row { display: flex; align-items: center; gap: 9px; padding: 9px 10px; color: #5c5d72; font-size: 12px; }
+    .friend-avatar { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 10px; background: #e7eaff; color: #5261a8; font-size: 9px; font-weight: 750; }
+    .friend-name { flex: 1; }
+    .friend-status { display: flex; align-items: center; gap: 5px; color: #a0a1b1; font-size: 9px; }
+    .friend-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #b8bbc7; }
+    .friend-status.online { color: #3d966c; }
+    .friend-status.online::before { background: #48bd86; }
+    .side-note { margin: 2px 8px; color: #85869a; font-size: 12px; line-height: 1.65; }
+    .sidebar-spacer { flex: 1; }
+    .profile { display: flex; align-items: center; gap: 10px; padding: 13px 9px 2px; border-top: 1px solid #ececf3; }
+    .profile-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; background: linear-gradient(145deg, #ffcfb7, #e797b4); color: #573a49; font-size: 11px; font-weight: 750; }
+    .profile-copy { display: grid; gap: 3px; }
+    .profile-copy strong { color: #45465b; font-size: 12px; font-weight: 650; }
+    .profile-copy small { display: flex; align-items: center; gap: 5px; color: #88899b; font-size: 10px; }
+    .profile-copy small::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #48bd86; }
+    .logout-button { height: 30px; margin-left: auto; padding: 0 9px; border: 1px solid #e8e8f1; background: #fff; color: #77788c; font-size: 10px; }
+    .logout-button:hover { background: #f6f5ff; box-shadow: none; }
+    .chat { min-width: 0; display: flex; flex-direction: column; background: #fff; }
+    .chat-header { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eff0f5; }
+    .title { display: flex; align-items: center; gap: 13px; }
+    .bubble { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid #e6e4ff; border-radius: 15px; background: linear-gradient(145deg, #f0efff, #e7e5ff); color: #6c60de; font-size: 22px; }
+    h1 { margin: 0; color: #292a3b; font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+    .sub { margin-top: 4px; color: #9293a4; font-size: 12px; }
+    .online { display: flex; align-items: center; gap: 7px; color: #6d7284; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .online::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #50c28a; box-shadow: 0 0 0 3px #e5f8ee; }
+    .callbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 13px 26px; border-bottom: 1px solid #eff0f5; background: #fdfdff; }
+    button { height: 40px; border: 0; border-radius: 11px; padding: 0 15px; background: #6d60df; color: white; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; transition: background .16s, transform .16s, box-shadow .16s; }
+    button:hover { background: #5c50cf; box-shadow: 0 4px 12px #6256d52e; transform: translateY(-1px); }
+    button:disabled { opacity: .55; cursor: wait; transform: none; box-shadow: none; }
+    .callbar button { height: 35px; padding: 0 12px; font-size: 11px; }
+    .callbar select { height: 35px; min-width: 145px; flex: 1 1 160px; border: 1px solid #e7e8f0; border-radius: 10px; padding: 0 10px; background: white; color: #55566b; font: inherit; font-size: 11px; outline: none; }
+    .callbar select:focus, input:focus { border-color: #9188f0; box-shadow: 0 0 0 3px #8174e51a; }
+    .callbar .secondary { background: #f0efff; color: #6155d2; }
+    .callbar .secondary:hover { background: #e7e5ff; box-shadow: none; }
+    .callbar .hangup { background: #e45e69; }
+    .callbar .hangup:hover { background: #cf4855; }
+    #callStatus { flex: 1 1 100%; padding: 0 2px; color: #9697a8; font-size: 10px; }
+    .callstage { display: grid; gap: 8px; padding: 12px 20px; background: #222235; }
+    .videogrid { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 10px; }
+    .videogrid video { width: 100%; height: 220px; border-radius: 13px; background: #141420; object-fit: cover; }
+    .videogrid #localVideo { height: 105px; }
+    .audiocall { padding: 24px; color: #fff; text-align: center; font-size: 13px; }
+    #messages { display: flex; flex: 1; flex-direction: column; gap: 18px; overflow: auto; list-style: none; margin: 0; padding: 28px clamp(18px, 5vw, 62px); background: linear-gradient(#fff, #fdfdff); }
+    .message { max-width: min(76%, 560px); align-self: flex-start; }
+    .message.mine { align-self: flex-end; }
+    .meta { margin: 0 10px 6px; color: #a0a1b0; font-size: 10px; }
+    .mine .meta { text-align: right; }
+    .text { overflow-wrap: anywhere; white-space: pre-wrap; padding: 12px 15px; border: 1px solid #ebecf2; border-radius: 5px 17px 17px 17px; background: #f5f6fa; color: #4f5062; font-size: 13px; line-height: 1.55; }
+    .mine .text { border-color: #dfdcff; border-radius: 17px 5px 17px 17px; background: #eeedff; color: #45405f; }
+    .voice-player { display: block; width: min(290px, 70vw); height: 40px; border-radius: 20px; }
+    .empty { margin: auto; color: #a0a1b0; text-align: center; font-size: 13px; }
+    #notice { min-height: 18px; padding: 0 27px 4px; color: #d05261; font-size: 11px; }
+    .emoji-bar { display: flex; gap: 6px; padding: 8px 25px 0; }
+    .emoji-button { width: 32px; height: 30px; min-width: 32px; padding: 0; border: 1px solid #eeeef5; border-radius: 9px; background: #fff; color: inherit; font-size: 15px; }
+    .emoji-button:hover { border-color: #e2dfff; background: #f5f4ff; box-shadow: none; }
+    form { display: flex; align-items: center; gap: 8px; padding: 10px 24px 20px; }
+    .fields { display: flex; flex: 1; gap: 8px; min-width: 0; }
+    input { min-width: 0; height: 42px; border: 1px solid #e7e8f0; border-radius: 11px; padding: 0 12px; background: #fff; color: #37384c; outline: none; font: inherit; font-size: 12px; }
+    input::placeholder { color: #b1b2bf; }
+    #name { width: 122px; flex: 0 0 122px; }
+    #text { flex: 1; }
+    .voice-button, .dictate-button { flex: 0 0 auto; height: 40px; padding: 0 11px; border: 1px solid #e8e8f1; background: #fff; color: #66677c; white-space: nowrap; }
+    .voice-button:hover, .dictate-button:hover { border-color: #dad7ff; background: #f6f5ff; box-shadow: none; }
+    .dictate-button.listening { border-color: #efc9ce; background: #fff0f1; color: #c74756; }
+    #send { flex: 0 0 auto; height: 40px; padding: 0 17px; }
+    @media (max-width: 900px) { body { padding: 16px; } .app-shell { grid-template-columns: 205px minmax(0, 1fr); height: calc(100vh - 32px); } .sidebar { padding-inline: 13px; } .chat-header { padding-inline: 20px; } .callbar { padding-inline: 18px; } form { flex-wrap: wrap; } .fields { flex-basis: 100%; } #name { flex-basis: 112px; width: 112px; } }
+    @media (max-width: 650px) { body { padding: 0; } .app-shell { width: 100%; height: 100vh; min-height: 0; grid-template-columns: minmax(0, 1fr); border: 0; border-radius: 0; } .sidebar { display: none; } .chat-header { min-height: 74px; padding: 14px 16px; } .bubble { width: 40px; height: 40px; } .callbar { padding: 10px 12px; gap: 6px; } .callbar select { min-width: 100%; } .callbar button { flex: 1 1 auto; padding-inline: 8px; } #callStatus { flex-basis: 100%; } #messages { padding: 20px 14px; } .message { max-width: 88%; } .emoji-bar { padding-inline: 13px; } form { padding: 8px 12px 13px; gap: 6px; } .fields { gap: 6px; } #name { flex-basis: 92px; width: 92px; padding-inline: 9px; } input { padding-inline: 10px; } .voice-button, .dictate-button { flex: 1 1 calc(33.333% - 8px); padding-inline: 6px; } #send { flex: 1 1 calc(33.333% - 8px); padding-inline: 8px; } .videogrid { grid-template-columns: minmax(0, 1fr) 90px; } .videogrid video { height: 170px; } .videogrid #localVideo { height: 75px; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Chat navigation">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span> little<span>chat</span></div>
+      <div class="workspace">
+        <span class="workspace-mark">LC</span>
+        <span class="workspace-copy"><strong>My workspace</strong><small>Community room</small></span>
+      </div>
+      <div class="sidebar-label">WORKSPACE</div>
+      <div class="side-link active"><span class="hash">#</span> General chat <span class="live-tag">LIVE</span></div>
+      <div class="sidebar-label" style="margin-top:28px">FRIENDS</div>
+      <div class="friend-row">
+        <span class="friend-avatar" style="background:#e3f3eb;color:#438363">B</span>
+        <span class="friend-name">Babu</span>
+        <span id="babuStatus" class="friend-status">Offline</span>
+      </div>
+      <div class="sidebar-label" style="margin-top:30px">A LITTLE NOTE</div>
+      <p class="side-note">A friendly space to share a thought, send a voice note, or catch up face to face.</p>
+      <div class="sidebar-spacer"></div>
+      <div class="profile">
+        <span id="profileAvatar" class="profile-avatar">YOU</span>
+        <span class="profile-copy"><strong id="profileName">Your profile</strong><small>Signed in</small></span>
+        <button id="logoutButton" class="logout-button" type="button">Sign out</button>
+      </div>
+    </aside>
+    <main class="chat" aria-label="Simple chat">
+    <header class="chat-header">
+      <div class="title"><div class="bubble" aria-hidden="true">✳</div><div><h1>General chat</h1><div class="sub">A small space to say hello</div></div></div>
+      <div class="online">Chat room</div>
+    </header>
+    <section class="callbar" aria-label="Voice and video call options">
+      <select id="friendSelect" aria-label="Choose an online friend"><option value="">Choose online friend</option></select>
+      <button id="friendCall" class="secondary" type="button">Call friend</button>
+      <button id="audioCall" class="secondary" type="button">☎ Audio call</button>
+      <button id="videoCall" class="secondary" type="button">▣ Video call</button>
+      <button id="hangup" class="hangup" type="button" hidden>End call</button>
+      <span id="callStatus" aria-live="polite">Calls need another open chat tab.</span>
+    </section>
+    <section id="callStage" class="callstage" hidden aria-label="Call video">
+      <div id="videoGrid" class="videogrid">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+      <div id="audioCallLabel" class="audiocall" hidden>Audio call connected</div>
+      <audio id="remoteAudio" autoplay></audio>
+    </section>
+    <ol id="messages" aria-live="polite"><li class="empty">Loading messages…</li></ol>
+    <div id="notice" role="status"></div>
+    <div class="emoji-bar" aria-label="Quick emojis">
+      <button class="emoji-button" type="button" data-emoji="❤️" aria-label="Insert red heart">❤️</button>
+      <button class="emoji-button" type="button" data-emoji="💚" aria-label="Insert green heart">💚</button>
+      <button class="emoji-button" type="button" data-emoji="🤗" aria-label="Insert hug">🤗</button>
+    </div>
+    <form id="form">
+      <div class="fields">
+        <input id="name" maxlength="40" placeholder="Account name" aria-label="Your account name" readonly required>
+        <input id="text" maxlength="500" placeholder="Write a message…" aria-label="Message" autocomplete="off" required>
+      </div>
+      <button id="dictateButton" class="dictate-button" type="button">🎤 Dictate</button>
+      <button id="voiceButton" class="voice-button" type="button">🎙 Voice</button>
+      <button id="send" type="submit">Send</button>
+    </form>
+    </main>
+  </div>
+  <script>
+    const list = document.querySelector('#messages');
+    const form = document.querySelector('#form');
+    const nameInput = document.querySelector('#name');
+    const profileName = document.querySelector('#profileName');
+    const profileAvatar = document.querySelector('#profileAvatar');
+    const logoutButton = document.querySelector('#logoutButton');
+    const textInput = document.querySelector('#text');
+    const notice = document.querySelector('#notice');
+    const callStatus = document.querySelector('#callStatus');
+    const callStage = document.querySelector('#callStage');
+    const audioButton = document.querySelector('#audioCall');
+    const videoButton = document.querySelector('#videoCall');
+    const hangupButton = document.querySelector('#hangup');
+    const localVideo = document.querySelector('#localVideo');
+    const remoteVideo = document.querySelector('#remoteVideo');
+    const remoteAudio = document.querySelector('#remoteAudio');
+    const videoGrid = document.querySelector('#videoGrid');
+    const audioCallLabel = document.querySelector('#audioCallLabel');
+    const friendSelect = document.querySelector('#friendSelect');
+    const babuStatus = document.querySelector('#babuStatus');
+    const friendCallButton = document.querySelector('#friendCall');
+    const voiceButton = document.querySelector('#voiceButton');
+    const dictateButton = document.querySelector('#dictateButton');
+    let signalSocket;
+    let selfPeerId;
+    let connectedPeers = [];
+    let remotePeerId;
+    let peerConnection;
+    let localStream;
+    let callMode;
+    let outgoing = false;
+    let pendingCandidates = [];
+    let desiredPeerId;
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordingTimer;
+    let renderedSignature = null;
+    let speechRecognition;
+    let dictationPrefix = '';
+    document.querySelectorAll('.emoji-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const emoji = button.dataset.emoji;
+        const start = textInput.selectionStart;
+        const end = textInput.selectionEnd;
+        textInput.setRangeText(emoji, start, end, 'end');
+        textInput.focus();
+      });
+    });
+
+    function sendSignal(type, payload) {
+      if (signalSocket?.readyState === WebSocket.OPEN && remotePeerId) {
+        signalSocket.send(JSON.stringify({ to: remotePeerId, type, payload }));
+      }
+    }
+
+    function ensureSignalSocket() {
+      if (signalSocket?.readyState === WebSocket.OPEN) return Promise.resolve();
+      if (signalSocket?.readyState === WebSocket.CONNECTING) {
+        return new Promise((resolve, reject) => {
+          signalSocket.addEventListener('open', resolve, { once: true });
+          signalSocket.addEventListener('error', reject, { once: true });
+        });
+      }
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      signalSocket = new WebSocket(`${protocol}//${location.host}/signal`);
+      return new Promise((resolve, reject) => {
+        signalSocket.addEventListener('open', resolve, { once: true });
+        signalSocket.addEventListener('error', reject, { once: true });
+        signalSocket.addEventListener('message', (event) => handleSignalMessage(JSON.parse(event.data)));
+        signalSocket.addEventListener('close', () => {
+          if (callMode) finishCall('Call connection closed.', false);
+        });
+      });
+    }
+
+    async function beginCall(mode, targetPeerId) {
+      if (callMode) return;
+      if (!navigator.mediaDevices?.getUserMedia) {
+        callStatus.textContent = 'Calls require localhost or a secure HTTPS connection.';
+        return;
+      }
+      callMode = mode;
+      outgoing = true;
+      desiredPeerId = targetPeerId || null;
+      callStage.hidden = false;
+      videoGrid.hidden = mode !== 'video';
+      audioCallLabel.hidden = mode !== 'audio';
+      hangupButton.hidden = false;
+      callStatus.textContent = 'Allow microphone/camera access…';
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
+        localVideo.srcObject = localStream;
+        await ensureSignalSocket();
+        const peerId = desiredPeerId || connectedPeers[0];
+        callStatus.textContent = peerId ? 'Calling…' : 'Waiting for someone to join…';
+        if (peerId && connectedPeers.includes(peerId)) invitePeer(peerId);
+      } catch (error) {
+        finishCall(error.name === 'NotAllowedError' ? 'Camera or microphone permission was denied.' : 'Could not start the call.', false);
+      }
+    }
+
+    function invitePeer(peerId) {
+      if (!peerId || remotePeerId || !callMode || !outgoing) return;
+      remotePeerId = peerId;
+      sendSignal('invite', { mode: callMode, caller: nameInput.value.trim() || 'Someone' });
+      callStatus.textContent = 'Calling…';
+    }
+
+    async function makePeerConnection() {
+      if (peerConnection) return peerConnection;
+      peerConnection = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      for (const track of localStream.getTracks()) peerConnection.addTrack(track, localStream);
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) sendSignal('ice', event.candidate);
+      };
+      peerConnection.ontrack = (event) => {
+        const [stream] = event.streams;
+        if (callMode === 'video') remoteVideo.srcObject = stream;
+        else remoteAudio.srcObject = stream;
+        callStatus.textContent = 'Connected';
+      };
+      peerConnection.onconnectionstatechange = () => {
+        if (peerConnection?.connectionState === 'connected') callStatus.textContent = 'Connected';
+        if (peerConnection?.connectionState === 'failed') finishCall('Call connection failed.', true);
+      };
+      return peerConnection;
+    }
+
+    async function acceptInvite(from, invite) {
+      if (callMode) {
+        signalSocket.send(JSON.stringify({ to: from, type: 'declined', payload: {} }));
+        return;
+      }
+      const caller = invite.caller || 'Someone';
+      if (!window.confirm(`${caller} is starting an ${invite.mode} call. Accept?`)) {
+        signalSocket.send(JSON.stringify({ to: from, type: 'declined', payload: {} }));
+        return;
+      }
+      remotePeerId = from;
+      callMode = invite.mode === 'video' ? 'video' : 'audio';
+      outgoing = false;
+      callStage.hidden = false;
+      videoGrid.hidden = callMode !== 'video';
+      audioCallLabel.hidden = callMode !== 'audio';
+      hangupButton.hidden = false;
+      callStatus.textContent = 'Allow microphone/camera access…';
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: callMode === 'video' });
+        localVideo.srcObject = localStream;
+        callStatus.textContent = 'Connecting…';
+        sendSignal('accepted', {});
+      } catch {
+        sendSignal('declined', {});
+        finishCall('Camera or microphone permission was denied.', false);
+      }
+    }
+
+    async function handleSignalMessage(message) {
+      if (message.type === 'ready') {
+        selfPeerId = message.peerId;
+        connectedPeers = message.peers;
+        if (outgoing && connectedPeers.length) invitePeer(desiredPeerId || connectedPeers[0]);
+        signalSocket.send(JSON.stringify({ type: 'presence', username: nameInput.value.trim() || 'Guest' }));
+        return;
+      }
+      if (message.type === 'peer-joined') {
+        if (!connectedPeers.includes(message.peerId)) connectedPeers.push(message.peerId);
+        if (outgoing && !remotePeerId && (!desiredPeerId || desiredPeerId === message.peerId)) invitePeer(message.peerId);
+        return;
+      }
+      if (message.type === 'online-users') {
+        connectedPeers = message.users.map((user) => user.peerId).filter((id) => id !== selfPeerId);
+        const babuIsOnline = message.users.some((user) => user.name.trim().toLowerCase() === 'babu');
+        babuStatus.textContent = babuIsOnline ? 'Online' : 'Offline';
+        babuStatus.classList.toggle('online', babuIsOnline);
+        const selected = friendSelect.value;
+        friendSelect.replaceChildren(new Option('Choose online friend', ''));
+        for (const user of message.users) {
+          if (user.peerId === selfPeerId) continue;
+          friendSelect.add(new Option(user.name, user.peerId));
+        }
+        if (connectedPeers.includes(selected)) friendSelect.value = selected;
+        return;
+      }
+      if (message.type === 'peer-left') {
+        connectedPeers = connectedPeers.filter((id) => id !== message.peerId);
+        if (remotePeerId === message.peerId) finishCall('The other person left.', false);
+        return;
+      }
+      if (message.type !== 'signal') return;
+      const { from, signalType, payload } = message;
+      if (signalType === 'invite') return acceptInvite(from, payload);
+      if (signalType === 'declined') return finishCall('Call declined.', false);
+      if (signalType === 'hangup') return finishCall('Call ended.', false);
+      if (signalType === 'accepted' && outgoing) {
+        callStatus.textContent = 'Connecting…';
+        const pc = await makePeerConnection();
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        sendSignal('offer', offer);
+      } else if (signalType === 'offer' && !outgoing) {
+        const pc = await makePeerConnection();
+        await pc.setRemoteDescription(payload);
+        for (const candidate of pendingCandidates) await pc.addIceCandidate(candidate);
+        pendingCandidates = [];
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendSignal('answer', answer);
+      } else if (signalType === 'answer' && outgoing && peerConnection) {
+        await peerConnection.setRemoteDescription(payload);
+        for (const candidate of pendingCandidates) await peerConnection.addIceCandidate(candidate);
+        pendingCandidates = [];
+      } else if (signalType === 'ice' && peerConnection) {
+        if (peerConnection.remoteDescription) await peerConnection.addIceCandidate(payload);
+        else pendingCandidates.push(payload);
+      } else if (signalType === 'ice') {
+        pendingCandidates.push(payload);
+      }
+    }
+
+    function finishCall(status, notifyPeer) {
+      if (notifyPeer) sendSignal('hangup', {});
+      peerConnection?.close();
+      peerConnection = null;
+      localStream?.getTracks().forEach((track) => track.stop());
+      localStream = null;
+      remoteVideo.srcObject = null;
+      remoteAudio.srcObject = null;
+      localVideo.srcObject = null;
+      callMode = null;
+      remotePeerId = null;
+      outgoing = false;
+      desiredPeerId = null;
+      pendingCandidates = [];
+      callStage.hidden = true;
+      hangupButton.hidden = true;
+      callStatus.textContent = status;
+    }
+
+    audioButton.addEventListener('click', () => beginCall('audio', friendSelect.value));
+    videoButton.addEventListener('click', () => beginCall('video', friendSelect.value));
+    friendCallButton.addEventListener('click', () => {
+      if (!friendSelect.value) {
+        callStatus.textContent = 'Choose an online friend first.';
+        return;
+      }
+      beginCall('audio', friendSelect.value);
+    });
+    hangupButton.addEventListener('click', () => finishCall('Call ended.', true));
+    logoutButton.addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.replace('/login');
+    });
+
+    function render(messages, voiceNotes) {
+      const combined = [
+        ...messages.map((message) => ({ ...message, kind: 'text' })),
+        ...voiceNotes.map((message) => ({ ...message, kind: 'voice' }))
+      ].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+      const signature = combined.map((item) => `${item.kind}:${item.id}:${item.sentAt}`).join('|');
+      if (signature === renderedSignature) return;
+      renderedSignature = signature;
+      const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 50;
+      list.replaceChildren();
+      if (!combined.length) {
+        const empty = document.createElement('li');
+        empty.className = 'empty';
+        empty.textContent = 'No messages yet. Start the conversation!';
+        list.append(empty);
+        return;
+      }
+      for (const message of combined) {
+        const row = document.createElement('li');
+        row.className = 'message' + (message.username === nameInput.value.trim() ? ' mine' : '');
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const time = new Date(message.sentAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        meta.textContent = `${message.username} · ${time}`;
+        const content = document.createElement('div');
+        if (message.kind === 'voice') {
+          content.className = 'voice-player';
+          content.controls = true;
+          content.preload = 'none';
+          content.src = `data:${message.mimeType};base64,${message.audioBase64}`;
+          content.setAttribute('aria-label', `Voice message from ${message.username}`);
+        } else {
+          content.className = 'text';
+          content.textContent = message.text;
+        }
+        row.append(meta, content);
+        list.append(row);
+      }
+      if (atBottom) list.scrollTop = list.scrollHeight;
+    }
+
+    async function refresh() {
+      try {
+        const [messagesResponse, voiceResponse] = await Promise.all([
+          fetch('/api/messages'), fetch('/api/voice-messages')
+        ]);
+        if (!messagesResponse.ok || !voiceResponse.ok) throw new Error('Could not load messages.');
+        const [messages, voiceNotes] = await Promise.all([messagesResponse.json(), voiceResponse.json()]);
+        render(messages, voiceNotes);
+      } catch { notice.textContent = 'Can’t reach the chat server. Please refresh the page.'; }
+    }
+
+    voiceButton.addEventListener('click', async () => {
+      if (mediaRecorder?.state === 'recording') {
+        voiceButton.disabled = true;
+        voiceButton.textContent = 'Saving…';
+        mediaRecorder.stop();
+        return;
+      }
+      if (dictateButton.classList.contains('listening')) {
+        notice.textContent = 'Stop dictation before recording a voice message.';
+        return;
+      }
+      const username = nameInput.value.trim();
+      if (!username) {
+        notice.textContent = 'Enter your name before recording a voice message.';
+        nameInput.focus();
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        notice.textContent = 'Voice recording is not supported in this browser.';
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioType = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4']
+          .find((type) => MediaRecorder.isTypeSupported(type));
+        mediaRecorder = new MediaRecorder(stream, audioType ? { mimeType: audioType } : {});
+        audioChunks = [];
+        mediaRecorder.ondataavailable = (event) => { if (event.data.size) audioChunks.push(event.data); };
+        mediaRecorder.onstop = async () => {
+          clearTimeout(recordingTimer);
+          stream.getTracks().forEach((track) => track.stop());
+          try {
+            const clip = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+            if (clip.size > 5 * 1024 * 1024) throw new Error('Voice message is too large. Keep it under 5 MB.');
+            const response = await fetch('/api/voice-messages', {
+              method: 'POST',
+              headers: { 'Content-Type': clip.type },
+              body: clip
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Could not send voice message.');
+            notice.textContent = '';
+            await refresh();
+          } catch (error) {
+            notice.textContent = error.message;
+          } finally {
+            mediaRecorder = null;
+            audioChunks = [];
+            voiceButton.textContent = '🎙 Voice';
+            voiceButton.disabled = false;
+          }
+        };
+        mediaRecorder.start();
+        voiceButton.textContent = '■ Stop & send';
+        notice.textContent = 'Recording… clips stop automatically after 60 seconds.';
+        recordingTimer = setTimeout(() => {
+          if (mediaRecorder?.state === 'recording') mediaRecorder.stop();
+        }, 60000);
+      } catch {
+        notice.textContent = 'Microphone permission was denied or unavailable.';
+      }
+    });
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      speechRecognition = new SpeechRecognition();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = navigator.language || 'en-IN';
+      speechRecognition.onstart = () => {
+        dictateButton.textContent = '■ Stop dictation';
+        dictateButton.classList.add('listening');
+        notice.textContent = 'Listening… your words will appear in the message box.';
+      };
+      speechRecognition.onresult = (event) => {
+        const finalWords = [];
+        const liveWords = [];
+        for (let index = 0; index < event.results.length; index += 1) {
+          const words = event.results[index][0].transcript;
+          if (event.results[index].isFinal) finalWords.push(words);
+          else liveWords.push(words);
+        }
+        const spoken = [...finalWords, ...liveWords].join(' ').trim();
+        textInput.value = [dictationPrefix, spoken].filter(Boolean).join(dictationPrefix ? ' ' : '').slice(0, 500);
+        textInput.setSelectionRange(textInput.value.length, textInput.value.length);
+        textInput.scrollLeft = textInput.scrollWidth;
+      };
+      speechRecognition.onerror = (event) => {
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          notice.textContent = 'Allow microphone access to use dictation.';
+        } else if (event.error !== 'no-speech') {
+          notice.textContent = `Dictation stopped: ${event.error}.`;
+        }
+      };
+      speechRecognition.onend = () => {
+        dictateButton.textContent = '🎤 Dictate';
+        dictateButton.classList.remove('listening');
+        if (notice.textContent.startsWith('Listening')) notice.textContent = '';
+      };
+      dictateButton.addEventListener('click', () => {
+        if (dictateButton.classList.contains('listening')) {
+          speechRecognition.stop();
+          return;
+        }
+        if (mediaRecorder?.state === 'recording') {
+          notice.textContent = 'Stop the voice recording before starting dictation.';
+          return;
+        }
+        dictationPrefix = textInput.value.trim();
+        notice.textContent = '';
+        try { speechRecognition.start(); }
+        catch { notice.textContent = 'Dictation is already starting. Try again in a moment.'; }
+      });
+    } else {
+      dictateButton.disabled = true;
+      dictateButton.title = 'Live dictation is not supported by this browser.';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const username = nameInput.value.trim();
+      const text = textInput.value.trim();
+      if (!username || !text) return;
+      notice.textContent = '';
+      document.querySelector('#send').disabled = true;
+      try {
+        const response = await fetch('/api/messages', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, text })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Message could not be sent.');
+        textInput.value = '';
+        await refresh();
+        textInput.focus();
+      } catch (error) { notice.textContent = error.message; }
+      finally { document.querySelector('#send').disabled = false; }
+    });
+
+    async function initializeChat() {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (!response.ok) {
+          location.replace('/login');
+          return;
+        }
+        const { user } = await response.json();
+        nameInput.value = user.name;
+        profileName.textContent = user.name;
+        profileAvatar.textContent = user.name.split(/\s+/).slice(0, 2).map((part) => part[0].toUpperCase()).join('');
+        try {
+          await ensureSignalSocket();
+          callStatus.textContent = 'Ready for calls';
+        } catch {
+          callStatus.textContent = 'Call signaling is unavailable.';
+        }
+        await refresh();
+        setInterval(refresh, 2500);
+      } catch {
+        location.replace('/login');
+      }
+    }
+
+    initializeChat();
+  </script>
+</body>
+</html>
